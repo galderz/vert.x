@@ -147,6 +147,7 @@ public class DefaultNetServer implements NetServer, Closeable {
                 log.trace("Net server listening on " + host + ":" + bindFuture.channel().localAddress());
                 // Update port to actual port - wildcard port 0 might have been used
                 DefaultNetServer.this.port = ((InetSocketAddress)bindFuture.channel().localAddress()).getPort();
+                log.info("NetServer.listen, assign port to " + DefaultNetServer.this.port);
                 id = new ServerID(DefaultNetServer.this.port, id.host);
                 vertx.sharedNetServers().put(id, DefaultNetServer.this);
               } else {

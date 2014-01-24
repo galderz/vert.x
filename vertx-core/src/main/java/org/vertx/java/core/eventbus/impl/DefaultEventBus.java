@@ -447,6 +447,8 @@ public class DefaultEventBus implements EventBus {
 
   @Override
   public EventBus registerHandler(String address, Handler<? extends Message> handler) {
+    log.info("Register handler for " + address);
+    log.info("Server ID is " + serverID);
     registerHandler(address, handler, null);
     return this;
   }
@@ -570,7 +572,7 @@ public class DefaultEventBus implements EventBus {
     return bm;
   }
 
-  private NetServer setServer(int port, final String hostName, final Handler<AsyncResult<Void>> listenHandler) {
+     private NetServer setServer(int port, final String hostName, final Handler<AsyncResult<Void>> listenHandler) {
     final NetServer server = vertx.createNetServer().connectHandler(new Handler<NetSocket>() {
       public void handle(final NetSocket socket) {
         final RecordParser parser = RecordParser.newFixed(4, null);
@@ -610,6 +612,9 @@ public class DefaultEventBus implements EventBus {
           int serverPort = (publicPort == -1) ? server.port() : publicPort;
           String serverHost = (publicHost == null) ? hostName : publicHost;
           DefaultEventBus.this.serverID = new ServerID(serverPort, serverHost);
+          log.info("setServer(): publicPort is " + publicPort);
+          log.info("setServer(): server.port is " + server.port());
+          log.info("setServer(): set serverId to " + serverHost + ":" + serverPort);
         }
         if (listenHandler != null) {
           if (asyncResult.succeeded()) {
@@ -638,10 +643,15 @@ public class DefaultEventBus implements EventBus {
       }
     } else {
       // Publish
+      log.info("Is subs empty? " + subs.isEmpty());
+      log.info("Server ID is " + serverID);
       for (ServerID sid : subs) {
+        log.info("Try sub " + sid);
         if (!sid.equals(serverID)) {  //We don't send to this node
+          log.info("Send to remote " + sid);
           sendRemote(sid, message);
         } else {
+          log.info("Receive message");
           receiveMessage(message, timeoutID, null);
         }
       }
@@ -784,6 +794,7 @@ public class DefaultEventBus implements EventBus {
       handlers.list.add(new HandlerHolder(handler, replyHandler, localOnly, context, timeoutID));
       if (subs != null && !replyHandler && !localOnly) {
         // Propagate the information
+        log.info("Add to subs " + serverID);
         subs.add(address, serverID, completionHandler);
       } else {
         callCompletionHandler(completionHandler);
@@ -847,6 +858,7 @@ public class DefaultEventBus implements EventBus {
     // tricky
     ConnectionHolder holder = connections.get(theServerID);
     if (holder == null) {
+      log.info("Connection holder is null");
       NetClient client = vertx.createNetClient();
       // When process is creating a lot of connections this can take some time
       // so increase the timeout
@@ -861,6 +873,7 @@ public class DefaultEventBus implements EventBus {
         holder.connect(client, theServerID);
       }
     }
+    log.info("Write message " + message + " to client " + holder.client);
     holder.writeMessage(message);
   }
 
@@ -927,19 +940,19 @@ public class DefaultEventBus implements EventBus {
     final Message<T> copied = msg.copy();
 
     holder.context.execute(new Runnable() {
-      public void run() {
-        // Need to check handler is still there - the handler might have been removed after the message were sent but
-        // before it was received
-        try {
-          if (!holder.removed) {
-            holder.handler.handle(copied);
+       public void run() {
+          // Need to check handler is still there - the handler might have been removed after the message were sent but
+          // before it was received
+          try {
+             if (!holder.removed) {
+                holder.handler.handle(copied);
+             }
+          } finally {
+             if (holder.replyHandler) {
+                unregisterHandler(msg.address, holder.handler);
+             }
           }
-        } finally {
-          if (holder.replyHandler) {
-            unregisterHandler(msg.address, holder.handler);
-          }
-        }
-      }
+       }
     });
   }
 

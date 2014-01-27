@@ -58,7 +58,7 @@ public class DefaultNetServer implements NetServer, Closeable {
 
   private ChannelGroup serverChannelGroup;
   private boolean listening;
-  private ServerID id;
+  private volatile ServerID id;
   private DefaultNetServer actualServer;
   private final VertxEventLoopGroup availableWorkers = new VertxEventLoopGroup();
   private final HandlerManager<NetSocket> handlerManager = new HandlerManager<>(availableWorkers);
@@ -152,7 +152,7 @@ public class DefaultNetServer implements NetServer, Closeable {
                 // Update port to actual port - wildcard port 0 might have been used
                 DefaultNetServer.this.port = ((InetSocketAddress)bindFuture.channel().localAddress()).getPort();
                 log.info("NetServer.listen, assign port to " + DefaultNetServer.this.port);
-                id = new ServerID(DefaultNetServer.this.port, id.host);
+                id = new ServerID(DefaultNetServer.this.port, host);
                 vertx.sharedNetServers().put(id, DefaultNetServer.this);
               } else {
                 if (id != null) {

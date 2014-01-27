@@ -112,6 +112,7 @@ public class DefaultNetServer implements NetServer, Closeable {
     synchronized (vertx.sharedNetServers()) {
       DefaultNetServer shared;
       if (port == 0 || (shared = initId(port, host)) == null) { // Wildcard port will imply a new actual server each time
+        log.info("Actual server: " + actualServer);
         serverChannelGroup = new DefaultChannelGroup("vertx-acceptor-channels", GlobalEventExecutor.INSTANCE);
 
         ServerBootstrap bootstrap = new ServerBootstrap();

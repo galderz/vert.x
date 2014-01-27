@@ -94,6 +94,11 @@ public class DefaultNetServer implements NetServer, Closeable {
     return this;
   }
 
+  private DefaultNetServer initId(int port, String host) {
+    id = new ServerID(port, host);
+    return vertx.sharedNetServers().get(id);
+  }
+
   public NetServer listen(final int port, final String host, final Handler<AsyncResult<NetServer>> listenHandler) {
     if (connectHandler == null) {
       throw new IllegalStateException("Set connect handler first");
@@ -105,9 +110,8 @@ public class DefaultNetServer implements NetServer, Closeable {
     this.host = host;
 
     synchronized (vertx.sharedNetServers()) {
-      id = new ServerID(port, host);
-      DefaultNetServer shared = vertx.sharedNetServers().get(id);
-      if (shared == null || port == 0) { // Wildcard port will imply a new actual server each time
+      DefaultNetServer shared;
+      if (port == 0 || (shared = initId(port, host)) == null) { // Wildcard port will imply a new actual server each time
         serverChannelGroup = new DefaultChannelGroup("vertx-acceptor-channels", GlobalEventExecutor.INSTANCE);
 
         ServerBootstrap bootstrap = new ServerBootstrap();
@@ -128,7 +132,7 @@ public class DefaultNetServer implements NetServer, Closeable {
               pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());       // For large file / sendfile support
             }
             pipeline.addLast("handler", new ServerHandler());
-            }
+          }
         });
 
         tcpHelper.applyConnectionOptions(bootstrap);
@@ -151,7 +155,9 @@ public class DefaultNetServer implements NetServer, Closeable {
                 id = new ServerID(DefaultNetServer.this.port, id.host);
                 vertx.sharedNetServers().put(id, DefaultNetServer.this);
               } else {
-                vertx.sharedNetServers().remove(id);
+                if (id != null) {
+                  vertx.sharedNetServers().remove(id);
+                }
               }
             }
           });
@@ -172,14 +178,12 @@ public class DefaultNetServer implements NetServer, Closeable {
           listening = false;
           return this;
         }
-        if (port != 0) {
-          vertx.sharedNetServers().put(id, this);
-        }
         actualServer = this;
       } else {
         // Server already exists with that host/port - we will use that
         checkConfigs(actualServer, this);
         actualServer = shared;
+        // it is important to set the port in the future as the bind operation may not be completed
         actualServer.bindFuture.addListener(new ChannelFutureListener() {
           @Override
           public void operationComplete(ChannelFuture channelFuture) throws Exception {

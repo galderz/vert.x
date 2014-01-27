@@ -136,6 +136,8 @@ public class DefaultNetServer implements NetServer, Closeable {
         });
 
         tcpHelper.applyConnectionOptions(bootstrap);
+        // not start reading until the bind future was notified
+        bootstrap.option(ChannelOption.AUTO_READ, false);
 
         if (connectHandler != null) {
           // Share the event loop thread to also serve the NetServer's network traffic.
@@ -200,6 +202,9 @@ public class DefaultNetServer implements NetServer, Closeable {
       actualServer.bindFuture.addListener(new ChannelFutureListener() {
         @Override
         public void operationComplete(final ChannelFuture future) throws Exception {
+          // start reading now
+          future.channel().config().setAutoRead(true);
+
           if (listenHandler != null) {
             final AsyncResult<NetServer> res;
             if (future.isSuccess()) {

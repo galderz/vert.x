@@ -180,7 +180,12 @@ public class DefaultNetServer implements NetServer, Closeable {
         // Server already exists with that host/port - we will use that
         checkConfigs(actualServer, this);
         actualServer = shared;
-        this.port = shared.port();
+        actualServer.bindFuture.addListener(new ChannelFutureListener() {
+          @Override
+          public void operationComplete(ChannelFuture channelFuture) throws Exception {
+            DefaultNetServer.this.port = ((InetSocketAddress)channelFuture.channel().localAddress()).getPort();
+          }
+        });
         if (connectHandler != null) {
           // Share the event loop thread to also serve the NetServer's network traffic.
           actualServer.handlerManager.addHandler(connectHandler, actualCtx);

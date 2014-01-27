@@ -63,7 +63,7 @@ public class DefaultNetServer implements NetServer, Closeable {
   private final VertxEventLoopGroup availableWorkers = new VertxEventLoopGroup();
   private final HandlerManager<NetSocket> handlerManager = new HandlerManager<>(availableWorkers);
   private String host;
-  private int port;
+  private volatile int port;
   private ChannelFuture bindFuture;
 
   public DefaultNetServer(VertxInternal vertx) {

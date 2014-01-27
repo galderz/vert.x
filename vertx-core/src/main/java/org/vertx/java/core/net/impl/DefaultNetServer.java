@@ -112,7 +112,6 @@ public class DefaultNetServer implements NetServer, Closeable {
     synchronized (vertx.sharedNetServers()) {
       DefaultNetServer shared;
       if (port == 0 || (shared = initId(port, host)) == null) { // Wildcard port will imply a new actual server each time
-        log.info("Actual server: " + actualServer);
         serverChannelGroup = new DefaultChannelGroup("vertx-acceptor-channels", GlobalEventExecutor.INSTANCE);
 
         ServerBootstrap bootstrap = new ServerBootstrap();
@@ -164,7 +163,6 @@ public class DefaultNetServer implements NetServer, Closeable {
               }
             }
           });
-          log.info("bindFuture returned by bootstrap.bind(addr).addListener is: " + System.identityHashCode(bindFuture));
           serverChannelGroup.add(bindFuture.channel());
         } catch (final Throwable t) {
           // Make sure we send the exception back through the handler (if any)
@@ -187,7 +185,6 @@ public class DefaultNetServer implements NetServer, Closeable {
       } else {
         // Server already exists with that host/port - we will use that
         checkConfigs(actualServer, this);
-        log.info("Using shared");
         actualServer = shared;
         // it is important to set the port in the future as the bind operation may not be completed
         actualServer.bindFuture.addListener(new ChannelFutureListener() {
@@ -203,7 +200,6 @@ public class DefaultNetServer implements NetServer, Closeable {
       }
 
       // just add it to the future so it gets notified once the bind is complete
-      log.info("actualServer.bindFuture is: " + System.identityHashCode(actualServer.bindFuture));
       actualServer.bindFuture.addListener(new ChannelFutureListener() {
         @Override
         public void operationComplete(final ChannelFuture future) throws Exception {
@@ -218,8 +214,6 @@ public class DefaultNetServer implements NetServer, Closeable {
               listening = false;
               res = new DefaultFutureResult<>(future.cause());
             }
-            log.info("Wait (30 sec max) for NetServer port to be assigned before setting server id");
-            bindFuture.await(30000);
             actualCtx.execute(future.channel().eventLoop(), new Runnable() {
               @Override
               public void run() {

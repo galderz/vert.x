@@ -618,8 +618,10 @@ public class DefaultEventBus implements EventBus {
         }
         if (listenHandler != null) {
           if (asyncResult.succeeded()) {
+            log.info("Call listenHandler.handle() inside server.listen AsyncResultHandler, and result succeeded");
             listenHandler.handle(new DefaultFutureResult<>((Void)null));
           } else {
+            log.info("Call listenHandler.handle() inside server.listen AsyncResultHandler, and result did not succeed because " + asyncResult.cause());
             listenHandler.handle(new DefaultFutureResult<Void>(asyncResult.cause()));
           }
         } else if (asyncResult.failed()) {

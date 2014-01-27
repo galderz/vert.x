@@ -170,6 +170,7 @@ public class DefaultNetServer implements NetServer, Closeable {
             vertx.runOnContext(new VoidHandler() {
               @Override
               protected void handle() {
+                log.info("Call listenHandler.handle() inside vertx.runOnContext (there was an exception: " + t + ")");
                 listenHandler.handle(new DefaultFutureResult<NetServer>(t));
               }
             });
@@ -184,6 +185,7 @@ public class DefaultNetServer implements NetServer, Closeable {
       } else {
         // Server already exists with that host/port - we will use that
         checkConfigs(actualServer, this);
+        log.info("Using shared");
         actualServer = shared;
         // it is important to set the port in the future as the bind operation may not be completed
         actualServer.bindFuture.addListener(new ChannelFutureListener() {
@@ -216,6 +218,7 @@ public class DefaultNetServer implements NetServer, Closeable {
             actualCtx.execute(future.channel().eventLoop(), new Runnable() {
               @Override
               public void run() {
+                log.info("Call listenHandler.handle() inside ChannelFutureListener.operationComplete()");
                 listenHandler.handle(res);
               }
             });

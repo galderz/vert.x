@@ -153,7 +153,7 @@ public class DefaultNetServer implements NetServer, Closeable {
                 log.trace("Net server listening on " + host + ":" + bindFuture.channel().localAddress());
                 // Update port to actual port - wildcard port 0 might have been used
                 DefaultNetServer.this.port = ((InetSocketAddress)bindFuture.channel().localAddress()).getPort();
-                log.info("NetServer.listen, assign port to " + DefaultNetServer.this.port);
+                //log.info("NetServer.listen, assign port to " + DefaultNetServer.this.port);
                 id = new ServerID(DefaultNetServer.this.port, host);
                 vertx.sharedNetServers().put(id, DefaultNetServer.this);
               } else {
@@ -217,7 +217,7 @@ public class DefaultNetServer implements NetServer, Closeable {
             actualCtx.execute(future.channel().eventLoop(), new Runnable() {
               @Override
               public void run() {
-                log.info("Call listenHandler.handle() inside ChannelFutureListener.operationComplete()");
+                //log.info("Call listenHandler.handle() inside ChannelFutureListener.operationComplete()");
                 listenHandler.handle(res);
               }
             });

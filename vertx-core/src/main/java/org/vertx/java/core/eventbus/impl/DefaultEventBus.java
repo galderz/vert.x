@@ -447,8 +447,8 @@ public class DefaultEventBus implements EventBus {
 
   @Override
   public EventBus registerHandler(String address, Handler<? extends Message> handler) {
-    log.info("Register handler for " + address);
-    log.info("Server ID is " + serverID);
+    // log.info("Register handler for " + address);
+    // log.info("Server ID is " + serverID);
     registerHandler(address, handler, null);
     return this;
   }
@@ -612,13 +612,13 @@ public class DefaultEventBus implements EventBus {
           int serverPort = (publicPort == -1) ? server.port() : publicPort;
           String serverHost = (publicHost == null) ? hostName : publicHost;
           DefaultEventBus.this.serverID = new ServerID(serverPort, serverHost);
-          log.info("setServer(): publicPort is " + publicPort);
-          log.info("setServer(): server.port is " + server.port());
-          log.info("setServer(): set serverId to " + serverHost + ":" + serverPort);
+          // log.info("setServer(): publicPort is " + publicPort);
+           // log.info("setServer(): server.port is " + server.port());
+           // log.info("setServer(): set serverId to " + serverHost + ":" + serverPort);
         }
         if (listenHandler != null) {
           if (asyncResult.succeeded()) {
-            log.info("Call listenHandler.handle() inside server.listen AsyncResultHandler, and result succeeded");
+            // log.info("Call listenHandler.handle() inside server.listen AsyncResultHandler, and result succeeded");
             listenHandler.handle(new DefaultFutureResult<>((Void)null));
           } else {
             log.info("Call listenHandler.handle() inside server.listen AsyncResultHandler, and result did not succeed because " + asyncResult.cause());
@@ -645,15 +645,15 @@ public class DefaultEventBus implements EventBus {
       }
     } else {
       // Publish
-      log.info("Is subs empty? " + subs.isEmpty());
-      log.info("Server ID is " + serverID);
+      // log.info("Is subs empty? " + subs.isEmpty());
+      // log.info("Server ID is " + serverID);
       for (ServerID sid : subs) {
-        log.info("Try sub " + sid);
+        // log.info("Try sub " + sid);
         if (!sid.equals(serverID)) {  //We don't send to this node
-          log.info("Send to remote " + sid);
+          // log.info("Send to remote " + sid);
           sendRemote(sid, message);
         } else {
-          log.info("Receive message");
+          // log.info("Receive message");
           receiveMessage(message, timeoutID, null);
         }
       }
@@ -796,7 +796,7 @@ public class DefaultEventBus implements EventBus {
       handlers.list.add(new HandlerHolder(handler, replyHandler, localOnly, context, timeoutID));
       if (subs != null && !replyHandler && !localOnly) {
         // Propagate the information
-        log.info("Add to subs " + serverID);
+        // log.info("Add to subs " + serverID);
         subs.add(address, serverID, completionHandler);
       } else {
         callCompletionHandler(completionHandler);
@@ -860,7 +860,7 @@ public class DefaultEventBus implements EventBus {
     // tricky
     ConnectionHolder holder = connections.get(theServerID);
     if (holder == null) {
-      log.info("Connection holder is null");
+      // log.info("Connection holder is null");
       NetClient client = vertx.createNetClient();
       // When process is creating a lot of connections this can take some time
       // so increase the timeout
@@ -875,7 +875,7 @@ public class DefaultEventBus implements EventBus {
         holder.connect(client, theServerID);
       }
     }
-    log.info("Write message " + message + " to client " + holder.client);
+    // log.info("Write message " + message + " to client " + holder.client);
     holder.writeMessage(message);
   }
 
